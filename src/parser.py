@@ -14,7 +14,6 @@ import csv
 
 __all__ = (
     'parse_iris_txt',
-    'parse_drug_csv',
     'parse_wine_txt',
 )
 
@@ -48,19 +47,6 @@ def parse_iris_txt(path: str):
             iris_data.append(row) # Add new entry to data
 
     return iris_data
-
-def parse_drug_csv(path: str):
-    drug_data = []
-    with open(path, 'r') as file:
-        reader = csv.reader(file)
-        for line in reader:
-            row = []
-            for count, element in enumerate(line[6:]):
-                if count < 7:
-                    element = float(element)
-                row.append(element)
-            drug_data.append(row)
-    return drug_data
 
 def parse_wine_txt(path: str):
     wine_data = [['Alcohol', 'Malic Acid', 'Ash', 'Alcalinity of Ash', 'Magnesium', 'Magnesium', 'Total Phenols', 'Flavanoids', 'Nonflavanoid Phenols', 'Proanthocyanins', 'Color Intensity', 'Hue', 'OD280/OD315 of Diluted Wines', 'Proline']] # Initialize return data and add labels

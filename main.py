@@ -5,12 +5,13 @@
 import os
 
 # External Imports
-from bokeh.plotting import figure, show, output_file
+from bokeh.plotting import show, output_file
 from bokeh.layouts import row
 
 # Module Imports
 from src.parser import *
 from src.mining import *
+from src.visualize import *
 
 #=======================================#
 # Globals & Constants                   #
@@ -40,34 +41,27 @@ data_without_labels = data[1:]
 data_without_species = [point[:-1] for point in data_without_labels]
 
 # Cluster the data
-clustered_data = kmedoids(data_without_species, 3)
+kmeans_data = kmeans(data_without_species, 3)
+kmedoids_data = kmedoids(data_without_species, 3)
 
 # Output a pretty chart
-p1_x = [point[-3] for point in clustered_data]
-p1_y = [point[-2] for point in clustered_data]
+x = [point[-3] for point in kmeans_data]
+y = [point[-2] for point in kmeans_data]
 
-# For coloring
 colormap = ['green', 'blue', 'red']
-p1_species = [colormap[int(point[-1])] for point in clustered_data]
+kmeans_species = [colormap[int(point[-1])] for point in kmeans_data]
+p_kmeans = visualize_2d(x, y, kmeans_species, title='kmeans', y_axis_label="Petal Width")
 
-p1 = figure(title = "K=3 Clustered Iris")
-p1.xaxis.axis_label = 'Petal Length'
-p1.yaxis.axis_label = 'Petal Width'
+colormap = ['green', 'blue', 'red']
+kmedoids_species = [colormap[int(point[-1])] for point in kmedoids_data]
+p_kmedoids = visualize_2d(x, y, kmedoids_species, title='kmedoids', x_axis_label="Petal Length")
 
-p1.circle(p1_x, p1_y, color=p1_species)
-
-# Key
 colormap = {'Iris-versicolor': 'green', 'Iris-virginica':'blue', 'Iris-setosa':'red'}
-p2_species = [colormap[point[-1]] for point in data_without_labels]
+key_species = [colormap[point[-1]] for point in data_without_labels]
+p_key = visualize_2d(x, y, key_species, title='key')
 
-p2 = figure(title = "Actual Iris")
-p2.xaxis.axis_label = 'Petal Length'
-p2.yaxis.axis_label = 'Petal Width'
+p = row(p_kmeans, p_kmedoids, p_key)
 
-p2.circle(p1_x, p1_y, color=p2_species)
-
-p = row(p1, p2)
-
-output_file("Out_Files/iris.html", title="Iris Example")
+output_file('Out_Files/iris.html', title='Iris Example')
 
 show(p)

@@ -16,7 +16,7 @@ import numpy as np
 # Globals & Constants                   #
 #=======================================#
 
-RANDOM_SEED = 321
+RANDOM_SEED = 500
 
 ListLike = TypeVar('ListLike', list, np.ndarray)
 
