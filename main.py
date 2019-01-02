@@ -40,7 +40,7 @@ data_without_labels = data[1:]
 data_without_species = [point[:-1] for point in data_without_labels]
 
 # Cluster the data
-clustered_data = kmeans(data_without_species, 3)
+clustered_data = kmedoids(data_without_species, 3)
 
 # Output a pretty chart
 p1_x = [point[-3] for point in clustered_data]

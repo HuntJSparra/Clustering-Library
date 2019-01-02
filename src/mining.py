@@ -21,6 +21,7 @@ RANDOM_SEED = 321
 ListLike = TypeVar('ListLike', list, np.ndarray)
 
 __all__ = (
+    'kabsclust',
     'kmeans',
     'kmedoids',
     'hca',
@@ -31,14 +32,13 @@ __all__ = (
 # Public Methods                        #
 #=======================================#
 
-def kmeans(data: list, groups: int):
+def kabsclust(data: list, groups: int, cluster):
     """
-    Applies the kmeans algorithm on data.
+    Applies an abstracted clustering algorithm on data.
     KMeans Algorithm:
         1) Select k random points to be centers
         2) Group points to the centers
-        3) Per group, set the center to be the mean center
-           of the grouped points
+        3) Per group, set the center based on the passed function's criteria
         4) Repeat from (2) until a predetermined break
     Args:
         data: A 2d list with rows containing data points as
@@ -69,7 +69,29 @@ def kmeans(data: list, groups: int):
     remaining_passes = 12
     while (remaining_passes >= 0):
         remaining_passes -= 1
+        data, centers = cluster(data, centers)
 
+    return data.tolist() # Reconvert numpy array to list before returning
+
+def kmeans(data: list, groups: int):
+    """
+    Applies the kmeans algorithm on data.
+    KMeans Algorithm:
+        1) Select k random points to be centers
+        2) Group points to the centers
+        3) Per group, set the center to be the mean center
+           of the grouped points
+        4) Repeat from (2) until a predetermined break
+    Args:
+        data: A 2d list with rows containing data points as
+              numbers (either float or int)
+        groups: K, or the number of groups the calculate in
+                kmeans
+    Returns:
+        Returns the input data, but with a new row for group added at the beginning:
+        [sepal length: str, sepal width: float, petal length: float, petal width: float, group: int]
+    """
+    def cluster(data: ListLike, centers: ListLike):
         # Group data by seeing which center the points are closest to
         for point in data:
             closest_center = -1
@@ -91,28 +113,9 @@ def kmeans(data: list, groups: int):
             else:
                 new_centers.append(_calculate_center(grouped_rows)) # Calculate the actual center for the data of that group
 
-        centers = new_centers
+        return data, new_centers
 
-    interspread = 0
-    centers_center = centers[0]
-    for center in centers[1:]:
-        for count, val in enumerate(center):
-            centers_center[count] += val
-    for val in centers_center:
-        val /= len(centers)
-    for count, center in enumerate(centers):
-        interspread += _distance(center, centers_center)**2
-    interspread /= len(centers)
-
-    intraspread = 0
-    for count, center in enumerate(centers):
-        for point in data:
-            if point[-1] != count:
-                continue
-
-            intraspread += _distance(point[:-1], center)**2
-
-    return data.tolist() # Reconvert numpy array to list before returning
+    return kabsclust(data, groups, cluster) # Reconvert numpy array to list before returning
 
 def kmedoids(data: list, groups: int):
     """
@@ -133,23 +136,7 @@ def kmedoids(data: list, groups: int):
         Returns the input data, but with a new row for group added at the beginning:
         [group: int, sepal length: str, sepal width: float, petal length: float, petal width: float, species: str]
     """
-    _setup_random() # Set randomseed for consistency
-
-    data = np.array(data) # Convert data from 2d list to 2d numpy array for easy calculation of data ranges
-
-    # Generate centers
-    centers=[]
-    for num in range(0, groups): # For every group
-        new_center = data[random.randrange(len(data))] # Select a new center
-        centers.append(new_center)
-
-    data = np.insert(data, len(data[0]), 0, axis=1) # Add column for groups
-
-    # Begin loop of recalculating clusters and their centers
-    remaining_passes = 12
-    while (remaining_passes >= 0):
-        remaining_passes -= 1
-
+    def cluster(data: ListLike, centers: ListLike):
         # Group data by seeing which center the points are closest to
         for point in data:
             closest_center = -1
@@ -169,7 +156,9 @@ def kmedoids(data: list, groups: int):
 
         centers = new_centers
 
-    return data.tolist() # Reconvert numpy array to list before returning
+        return data, centers
+
+    return kabsclust(data, groups, cluster) # Reconvert numpy array to list before returning
 
 def hca(data: list, groups: int):
     # Generate Matrix
