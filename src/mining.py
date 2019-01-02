@@ -16,7 +16,7 @@ import numpy as np
 # Globals & Constants                   #
 #=======================================#
 
-RANDOM_SEED = 300
+RANDOM_SEED = 321
 
 ListLike = TypeVar('ListLike', list, np.ndarray)
 
@@ -41,14 +41,13 @@ def kmeans(data: list, groups: int):
            of the grouped points
         4) Repeat from (2) until a predetermined break
     Args:
-        data: A 2d list with the first row being labels and
-              the remaining rows containing data points as
+        data: A 2d list with rows containing data points as
               numbers (either float or int)
         groups: K, or the number of groups the calculate in
                 kmeans
     Returns:
         Returns the input data, but with a new row for group added at the beginning:
-        [group: int, sepal length: str, sepal width: float, petal length: float, petal width: float, species: str]
+        [sepal length: str, sepal width: float, petal length: float, petal width: float, group: int]
     """
     _setup_random() # Set randomseed for consistency
 
