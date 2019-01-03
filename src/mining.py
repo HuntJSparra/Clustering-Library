@@ -25,7 +25,6 @@ __all__ = (
     'kmeans',
     'kmedoids',
     'hca',
-    'hca_visual',
 )
 
 #=======================================#
@@ -160,103 +159,56 @@ def kmedoids(data: list, groups: int):
 
     return kabsclust(data, groups, cluster) # Reconvert numpy array to list before returning
 
-def hca(data: list, groups: int):
+def hca(data: list):
+    """
+    Returns:
+        A list of tuples with each tuple being the two clusters being merged
+    """
+    def update_matrix(p1: int, p2: int, value: float):
+        nonlocal distance_matrix
+
+        if p1 not in distance_matrix.keys():
+            distance_matrix[p1] = {}
+        if p2 not in distance_matrix.keys():
+            distance_matrix[p2] = {} 
+
+        distance_matrix[p1][p2] = value
+        distance_matrix[p2][p1] = value
+    
+    # Clusters
+    clusters = []
+    current_candidates = []
+
     # Generate Matrix
     distance_matrix = {}
-    for row, datapoint in enumerate(data):
-        distance_matrix[str(row)] = {}
-        for other_row, other_datapoint in enumerate(data):
-            if row == other_row:
-                continue
-            distance_matrix[str(row)][str(other_row)] = _distance(datapoint, other_datapoint)
+    for index, point in enumerate(data):
+        current_candidates.append([index])
+        for other_index, other_point in enumerate(data[:index+1]):
+            update_matrix(index, other_index, _distance(point, other_point))
 
-    while len(distance_matrix) > groups:
-        # Get closest pair
-        point_A = '-1'
-        point_B = '-1'
+    # Merge until completion
+    while len(current_candidates) > 1:
+        closest_candidates = ([-1], [-1])
         closest_distance = float('inf')
-        for key_A, distance_dict in distance_matrix.items():
-            for key_B, distance in distance_dict.items():
-                if distance < closest_distance:
-                    point_A = key_A
-                    point_B = key_B
-                    closest_distance = distance
+        for c_index, cluster in enumerate(current_candidates):
+            for other_cluster in current_candidates[:c_index]:
+                new_distance = distance_matrix[cluster[0]][other_cluster[0]]
+                if new_distance < closest_distance:
+                    closest_distance = new_distance
+                    closest_candidates = (cluster, other_cluster)
 
-        # Cluster the two and update the matrix
-        # Replace distance_matrix[point_A] and distance_matrix[point_B] with distance_matrix[point_A+','+point_B]
-        new_key = point_A+','+point_B
-        distance_matrix[new_key] = {}
-        for key in distance_matrix[point_A]:
-            if key == point_A or key == point_B:
-                continue
-            distance_matrix[new_key][key] = (distance_matrix[point_A][key]+distance_matrix[point_B][key])/2
+        clusters.append(closest_candidates)
+        for point in closest_candidates[0]:
+            for other_point in closest_candidates[1]:
+                update_matrix(point, other_point, closest_distance)
 
-        # Delete old information
-        for key in distance_matrix[point_A]:
-            if key == point_A or key == point_B:
-                continue
-            del distance_matrix[key][point_A]
-            del distance_matrix[key][point_B]
-            distance_matrix[key][new_key] = distance_matrix[new_key][key]
-        del distance_matrix[point_A]
-        del distance_matrix[point_B]
+        current_candidates.remove(closest_candidates[0])
+        current_candidates.remove(closest_candidates[1])
+        current_candidates.append(closest_candidates[0]+closest_candidates[1])
 
-    data = np.array(data)
-    data = np.insert(data, len(data[0]), 0, axis=1) # Add column for groups
-    for group, key in enumerate(distance_matrix):
-        # Turn key back into group
-        for index in key.split(','):
-            data[int(index)][-1] = group
+    return clusters
 
-    return data.tolist()
 
-def hca_visual(data: list):
-    # Generate Matrix
-    distance_matrix = {}
-    for row, datapoint in enumerate(data):
-        distance_matrix[str(row)] = {}
-        for other_row, other_datapoint in enumerate(data):
-            if row == other_row:
-                continue
-            distance_matrix[str(row)][str(other_row)] = _distance(datapoint, other_datapoint)
-
-    merge_order = []
-
-    while len(distance_matrix) > 1:
-        # Get closest pair
-        point_A = '-1'
-        point_B = '-1'
-        closest_distance = float('inf')
-        for key_A, distance_dict in distance_matrix.items():
-            for key_B, distance in distance_dict.items():
-                if distance < closest_distance:
-                    point_A = key_A
-                    point_B = key_B
-                    closest_distance = distance
-
-        # Cluster the two and update the matrix
-        # Replace distance_matrix[point_A] and distance_matrix[point_B] with distance_matrix[point_A+','+point_B]
-        new_key = point_A+','+point_B
-        distance_matrix[new_key] = {}
-        for key in distance_matrix[point_A]:
-            if key == point_A or key == point_B:
-                continue
-            distance_matrix[new_key][key] = (distance_matrix[point_A][key]+distance_matrix[point_B][key])/2
-
-        # Add to merge_order
-        merge_order.append([point_A, point_B])
-
-        # Delete old information
-        for key in distance_matrix[point_A]:
-            if key == point_A or key == point_B:
-                continue
-            del distance_matrix[key][point_A]
-            del distance_matrix[key][point_B]
-            distance_matrix[key][new_key] = distance_matrix[new_key][key]
-        del distance_matrix[point_A]
-        del distance_matrix[point_B]
-
-    return merge_order
 
 #=======================================#
 # Internal Methods                      #

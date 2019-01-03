@@ -40,6 +40,18 @@ data = parse_iris_txt(IRIS_TXT_PATH)
 data_without_labels = data[1:]
 data_without_species = [point[:-1] for point in data_without_labels]
 
+
+
+
+
+hca_out = hca(data_without_species)
+output_file('Out_Files/iris.html', title='Iris Example')
+show(visualize_hca(hca_out))
+exit()
+
+
+
+
 # Cluster the data
 kmeans_data = kmeans(data_without_species, 3)
 kmedoids_data = kmedoids(data_without_species, 3)
